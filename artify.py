@@ -10,11 +10,13 @@ from scipy import ndimage
 
 
 network = "googlenet" #"overfeat" or "googlenet"
+contentimagefile = "./contentimage.png"
+styleimagefile = "./styleimage.jpg"
+
 
 
 def showim(im):
-    from pylab import imshow
-    imshow((im.astype("float")/im.max())[0].transpose(1,2,0))
+    pylab.imshow((im.astype("float")/im.max())[0].transpose(1,2,0))
 
 
 def getimage(filename):
@@ -40,8 +42,8 @@ def getimage(filename):
 
 
 #LOAD IMAGE DATA 
-contentimage = getimage("./contentimage.png") 
-styleimage = getimage("./styleimage.jpg") 
+contentimage = getimage(contentimagefile) 
+styleimage = getimage(styleimagefile) 
 
 
 #GET CONVNET LAYERS IN THE FORM OF THEANO EXPRESSIONS: 
@@ -101,7 +103,7 @@ totalgrad = theano.grad(totalcost, input_var)
 cost = theano.function([input_var], totalcost)
 grad = theano.function([input_var], totalgrad)
 
-#CONJGRAD BASED OPTIMIZATION FOR POTENTIALLY FASTER OPTIMIZATION (REQUIRES MINIMIZE.PY): 
+#CONJGRAD BASED OPTIMIZATION FOR POTENTIALLY FASTER OPTIMIZATION (REQUIRES minimize.py): 
 def conjgrad(im, maxnumlinesearch=10, imshape=styleimage.shape):
     import minimize
     im_flat, fs, numlinesearches = minimize.minimize(im.flatten(), lambda x: cost(x.reshape(imshape)), lambda x: grad(x.reshape(imshape)).flatten(), args=[], maxnumlinesearch=maxnumlinesearch, verbose=False)
@@ -118,7 +120,7 @@ imout = contentimage.copy()
 stepsize = 0.01
 momentum = 0.9
 inc = 0
-for i in range(1000):
+for i in range(10000):
     inc = momentum * inc - stepsize * grad(imout)
     imout += inc 
     imout[imout<10] = 10
