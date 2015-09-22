@@ -1,3 +1,11 @@
+# this is an implementation of the method described in 
+# 
+# Neural Algorithm of Artistic Style. Gatys, Ecker, Bethge 2015 http://arxiv.org/pdf/1508.06576.pdf
+#
+# this code is meant as an executable sketch showing the kinds of computation that need to be done. 
+# running the code makes the most sense in an interactive environment, eg. within an ipython shell 
+
+
 import numpy
 import numpy.random
 numpy_rng = numpy.random.RandomState(1)
@@ -117,10 +125,10 @@ def conjgrad(im, maxnumlinesearch=10, imshape=styleimage.shape):
 #imout = numpy_rng.randint(256, size=(contentimage.shape)).astype("float32")
 #imout = 128 * numpy.ones(contentimage.shape).astype("float32")
 imout = contentimage.copy()
-stepsize = 0.01
+stepsize = 0.1
 momentum = 0.9
 inc = 0
-for i in range(10000):
+for i in range(100):
     inc = momentum * inc - stepsize * grad(imout)
     imout += inc 
     imout[imout<10] = 10
@@ -135,6 +143,21 @@ for i in range(10000):
 
 #SHOW RESULT:
 showim(imout)
+
+
+print """to keep training, use something like: 
+for i in range(100):
+    inc = momentum * inc - stepsize * grad(imout)
+    imout += inc 
+    imout[imout<10] = 10
+    imout[imout>245] = 245
+    print cost(imout)
+
+
+or 
+
+imout = conjgrad(imout) 
+"""
 
 
 
