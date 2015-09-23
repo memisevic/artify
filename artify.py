@@ -5,7 +5,6 @@
 # see bottom of file for a usage example 
 
 
-
 import numpy
 import numpy.random
 numpy_rng = numpy.random.RandomState(1)
@@ -15,12 +14,6 @@ import sklearn_theano
 import sklearn_theano.feature_extraction
 import sklearn_theano.utils 
 from scipy import ndimage 
-
-
-network = "googlenet" #"overfeat" or "googlenet"
-contentimagefile = "./contentimage.png"
-styleimagefile = "./styleimage.jpg"
-
 
 
 def showim(im):
@@ -77,11 +70,11 @@ class Imtransformer(object):
             print "getting theano network" 
             theanolayers, self.input_var = sklearn_theano.feature_extraction.caffe.googlenet.create_theano_expressions()
             self.expressions = [theanolayers['conv1/7x7_s2'], theanolayers['conv2/3x3'], theanolayers['inception_3a/output'], theanolayers['inception_3b/output'], theanolayers['inception_4a/output'], theanolayers['inception_4b/output'], theanolayers['inception_4d/output'], theanolayers['inception_4e/output']]
-            contentweights, styleweights = [0.0, 0.0, 0.00001, 0.0, 0.00001, 0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] 
+            contentweights, styleweights = [0.0, 0.0, 0.01, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] 
             #contentweights, styleweights = [0.0, 0.0, 0.00001, 0.0, 0.00001, 0.0, 0.0, 0.0, 0.0], [0.1, 0.1, 1.0, 1.0, 10.0, 10.0, 100.0, 100.0] 
-    
-        self.styleweights = [theano.shared(value=w, name=str(i)) for i, w in enumerate(styleweights)]
+
         self.contentweights = [theano.shared(value=w, name=str(i)) for i, w in enumerate(contentweights)]
+        self.styleweights = [theano.shared(value=w, name=str(i)) for i, w in enumerate(styleweights)]
 
         #EXTRACT LAYER ACTIVATIONS AND DEFINE CONTENT AND STYLE COSTS: 
         self.totalcost = 0.0
@@ -134,8 +127,9 @@ class Imtransformer(object):
 
         assert type(initimage) == type(numpy.array([1])), "initimage has to be ndarray (representing an image)" 
 
+        imout = initimage.copy() 
+
         if optimizer == "sgd": 
-            imout = initimage.copy() 
             inc = 0
             for i in range(numsteps):
                 if i > 3:
@@ -148,7 +142,7 @@ class Imtransformer(object):
                 print "cost ", self.cost(imout)
         elif optimizer == "conjgrad": 
             #CONJGRAD BASED OPTIMIZATION FOR POTENTIALLY FASTER OPTIMIZATION (REQUIRES minimize.py): 
-            def conjgrad(im, maxnumlinesearch=10, imshape=self.styleimage.shape):
+            def conjgrad(im, maxnumlinesearch=numsteps, imshape=self.styleimage.shape):
                 import minimize
                 im_flat, fs, numlinesearches = minimize.minimize(im.flatten(), lambda x: self.cost(x.reshape(imshape)), lambda x: self.grad(x.reshape(imshape)).flatten(), args=[], maxnumlinesearch=maxnumlinesearch, verbose=False)
                 return im_flat.reshape(imshape)
@@ -164,7 +158,7 @@ if __name__ == "__main__":
     transformedimage = transformer.step()
     showim(transformedimage) 
     #not good? let's try a few more iterations with larger stepsize: 
-    transformedimage = transformer.step(transformedimage, numsteps=10, stepsize=1.0)
+    transformedimage = transformer.step(transformedimage, numsteps=10, stepsize=0.1)
     showim(transformedimage) 
 
 
