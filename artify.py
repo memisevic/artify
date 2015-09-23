@@ -158,7 +158,7 @@ if __name__ == "__main__":
     transformedimage = transformer.step()
     showim(transformedimage) 
     #not good? let's try a few more iterations with larger stepsize: 
-    transformedimage = transformer.step(transformedimage, numsteps=10, stepsize=0.1)
+    transformedimage = transformer.step(transformedimage, numsteps=10, stepsize=0.3)
     showim(transformedimage) 
 
 
